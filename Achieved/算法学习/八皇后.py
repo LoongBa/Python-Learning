@@ -36,6 +36,7 @@ def backtrack(map, row, number_of_queens):
 
 # 递推方式求解八皇后问题
 def solve_n_queens_iterator(number_of_queens):
+    solutions = []
     board = [['.' for _ in range(number_of_queens)] for _ in range(number_of_queens)]
     stack = [(0, 0)]
     while stack:
@@ -67,7 +68,6 @@ def solve_n_queens(number_of_queens):
     return solutions
 
 # 调用函数并打印结果
-solutions = []
 #solutions = solve_n_queens(8)
 solutions = solve_n_queens_iterator(8)
 print(f"找到了 {len(solutions)} 个解:")
