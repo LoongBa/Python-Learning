@@ -5,11 +5,21 @@ import shutil
 import datetime
 import winreg
 import argparse
+import logging
+import time
 from pathlib import Path
 from PIL import Image
 
 AutoOpenFolder = False
 
+# 获取当前脚本的目录
+script_dir = os.path.dirname(os.path.realpath(__file__))
+# 设置日志文件路径
+log_file = os.path.join(script_dir, 'task.log')
+
+# 设置日志格式
+logging.basicConfig(filename=log_file, level=logging.INFO, 
+                    format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 # 获取图片文件的高度和宽度,
 def GetImageSize(filename):
@@ -113,13 +123,15 @@ def get_user_shell_folders():
 
 
 def main():
-    print("壁纸备份工具 V1.30 \n作者：xxx CopyRight 2024")
+    print("壁纸备份工具 V1.31 \n作者：xxx CopyRight 2024")
     print("---------------------------")
     print("自动备份锁屏壁纸、桌面壁纸到系统“我的图片”文件夹下，按年月创建子目录。支持指定备份目录。")
     print("TODO: 可以用已有图片替换桌面和锁屏壁纸。\n")
+    logging.info('Script started')
 
     parser = argparse.ArgumentParser(description="壁纸工具")
-    parser.add_argument("--auto-open", action="store_true", help="自动打开备份文件夹")
+    parser.add_argument("--open-source-folder", action="store_true", help="自动打开来源文件夹")
+    parser.add_argument("--open-backup-folder", action="store_true", help="自动打开备份文件夹")
     # 添加一个新的参数用于指定备份目录，默认为用户的图片文件夹
     parser.add_argument(
         "backup_dir",
@@ -129,7 +141,8 @@ def main():
         help="指定备份目录的路径，默认为系统“我的图片”文件夹下的_WallPaper_Backup_目录",
     )
     args = parser.parse_args()
-    AutoOpenFolder = args.auto_open
+    OpenSourceFolder = args.open_source_folder
+    OpenBackupFolder = args.open_backup_folder
     # 使用用户指定的备份目录或默认值
     wallpaperBackupDir = args.backup_dir
     # 创建目标目录如果它不存在
@@ -153,11 +166,15 @@ def main():
     print("---------------------------")
 
     # 执行命令，用资源管理器打开 备份文件夹
-    os.system("start " + str(wallpaperBackupDir))
+    if OpenBackupFolder:
+        os.system("start " + str(wallpaperBackupDir))
     # 执行命令，用资源管理器打开 desktopWallPaperDir 文件夹
-    if AutoOpenFolder:
+    if OpenSourceFolder:
         os.system("start " + desktopWallPaperDir)
         os.system("start " + wallpaperDir)
+
+    logging.info('Script finished')
+        
     return
 
 
