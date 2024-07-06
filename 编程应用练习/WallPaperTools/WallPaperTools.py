@@ -6,8 +6,7 @@ import datetime
 import winreg
 import argparse
 import logging
-import hashlib
-import glob
+import time
 from pathlib import Path
 from PIL import Image
 
@@ -21,16 +20,6 @@ log_file = os.path.join(script_dir, 'task.log')
 # 设置日志格式
 logging.basicConfig(filename=log_file, level=logging.INFO, 
                     format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-
-def calculate_file_hash(filename, hash_method=hashlib.sha256, bufsize=8192):
-    """计算文件的 Hash 值"""
-    hasher = hash_method()
-    with open(filename, 'rb') as f:
-        buffer = f.read(bufsize)
-        while len(buffer) > 0:
-            hasher.update(buffer)
-            buffer = f.read(bufsize)
-    return hasher.hexdigest()
 
 # 获取图片文件的高度和宽度,
 def GetImageSize(filename):
@@ -46,29 +35,20 @@ def GetImageSize(filename):
 def ComposeNewFilename(filename, prefix="WallPaper"):
     modifiedTime = os.path.getmtime(filename)
     modifiedTime = datetime.datetime.fromtimestamp(modifiedTime)
+    # 获取图片文件的宽度和高度
     succeed, width, height = GetImageSize(filename)
     if not succeed:
         print(f"\t\033[33m{filename} 不是图片文件，忽略。\033[0m")
         return None
+    # 获取文件字节数
     sizeString = f"{os.path.getsize(filename):,}"
-    fileHash = calculate_file_hash(filename)[:8]  # 取 Hash 值的前八位
-    newFilename = f"{prefix}_{modifiedTime.strftime('%Y%m%d_%H%M%S')}_{height}x{width}_{sizeString}_{fileHash}.jpg"
+    newFilename = f"{prefix}_{modifiedTime.strftime('%Y%m%d_%H%M%S')}_{height}x{width}_{sizeString}.jpg"
     yearAndMonthDir = modifiedTime.strftime("%Y%m")
     return newFilename, yearAndMonthDir
 
-def CheckForDuplicateFiles(targetDir, filename:str):
-    """使用搜索模式检查目录中是否有文件名中包含相同文件大小和 Hash 值前八位的文件"""
-    targetFileInfo = filename.split("_")[-2:]  # 获取 "_460,010_b16625da"
-    # 构造搜索模式
-    searchPattern = f"*_{targetFileInfo[0]}_{targetFileInfo[1]}"   # "*_460,010_b16625da.jpg"
-    # 在目标目录及子目录中搜索匹配的文件
-    matchingFiles = glob.glob(str(targetDir / '**' / searchPattern), recursive=True)
-    
-    # 如果找到匹配的文件，则认为存在重复文件
-    return len(matchingFiles) > 0
 
 # 备份当前桌面图片 desktopWallPaperFilename 到目标目录下
-def BackupDesktopWallPaper(targetDir):
+def BackupDesktopWallPaper(backupDir):
     desktopWallPaperFilename = (
         os.getenv("APPDATA") + "\\Microsoft\\Windows\\Themes\\TranscodedWallpaper"
     )
@@ -78,12 +58,12 @@ def BackupDesktopWallPaper(targetDir):
     newFilename, subDir = ComposeNewFilename(desktopWallPaperFilename, "Desktop")
 
     # 创建目标目录，格式为当前月份
-    backupDir = targetDir / subDir
+    backupDir = backupDir / subDir
     backupDir.mkdir(exist_ok=True)
 
     backupFilename = backupDir / newFilename
     # 检查目标文件夹是否已经存在同名文件
-    if CheckForDuplicateFiles(targetDir, newFilename):
+    if backupFilename.exists():
         print(f"\t桌面壁纸\t{newFilename}\t\033[34m已存在，忽略\033[0m")
     else:
         # 复制当前桌面图片到目标目录，并使用备份文件名
@@ -122,7 +102,7 @@ def BackupWallPapers(targetDir):
                 newFilename = backupDir / newFilename
 
                 # 将文件复制到目标目录，并使用新的文件名
-                if CheckForDuplicateFiles(targetDir, newFilename.name):
+                if newFilename.exists():  # 如果文件已经存在，则忽略
                     print("\t\033[34m已存在，忽略\033[0m")
                 else:
                     shutil.copy2(fileEntry, newFilename)
@@ -143,10 +123,9 @@ def get_user_shell_folders():
 
 
 def main():
-    print("壁纸备份工具 V1.40 \n作者：xxx CopyRight 2024")
+    print("壁纸备份工具 V1.31 \n作者：xxx CopyRight 2024")
     print("---------------------------")
     print("自动备份锁屏壁纸、桌面壁纸到系统“我的图片”文件夹下，按年月创建子目录。支持指定备份目录。")
-    print("新增基于 Hash 值避免重复文件。")
     print("TODO: 可以用已有图片替换桌面和锁屏壁纸。\n")
     logging.info('Script started')
 
