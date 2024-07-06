@@ -32,7 +32,7 @@ def GetImageSize(filename):
 
 
 # 根据图片文件的高度、宽度、修改时间，构造文件名
-def ComposeNewFilename(filename, prefix="WallPaper_"):
+def ComposeNewFilename(filename, prefix="WallPaper"):
     modifiedTime = os.path.getmtime(filename)
     modifiedTime = datetime.datetime.fromtimestamp(modifiedTime)
     # 获取图片文件的宽度和高度
@@ -42,7 +42,7 @@ def ComposeNewFilename(filename, prefix="WallPaper_"):
         return None
     # 获取文件字节数
     sizeString = f"{os.path.getsize(filename):,}"
-    newFilename = f"{prefix}{height}x{width}_{modifiedTime.strftime('%Y%m%d_%H%M%S')}_{sizeString}.jpg"
+    newFilename = f"{prefix}_{modifiedTime.strftime('%Y%m%d_%H%M%S')}_{height}x{width}_{sizeString}.jpg"
     yearAndMonthDir = modifiedTime.strftime("%Y%m")
     return newFilename, yearAndMonthDir
 
@@ -55,7 +55,7 @@ def BackupDesktopWallPaper(backupDir):
     desktopWallPaperFilename = Path(desktopWallPaperFilename)
 
     # 构造备份文件名
-    newFilename, subDir = ComposeNewFilename(desktopWallPaperFilename, "Desktop_")
+    newFilename, subDir = ComposeNewFilename(desktopWallPaperFilename, "Desktop")
 
     # 创建目标目录，格式为当前月份
     backupDir = backupDir / subDir
@@ -93,7 +93,7 @@ def BackupWallPapers(targetDir):
                 # 获取文件的创建日期
                 print(f"{(i := i + 1):03}", "\t源文件: ", filename)
                 # 构造新的文件名
-                newFilename, subDir = ComposeNewFilename(fileEntry, "WallPaper_")
+                newFilename, subDir = ComposeNewFilename(fileEntry, "WallPaper")
                 # 创建目标目录，格式为当前月份
                 backupDir = targetDir / subDir
                 backupDir.mkdir(exist_ok=True)
