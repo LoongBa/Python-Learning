@@ -56,7 +56,7 @@ def ComposeNewFilename(filename, prefix="WallPaper"):
     yearAndMonthDir = modifiedTime.strftime("%Y%m")
     return newFilename, yearAndMonthDir
 
-def CheckForDuplicateFiles(targetDir, filename:str):
+def CheckForDuplicateFiles(targetDir, filename:str) -> bool: 
     """使用搜索模式检查目录中是否有文件名中包含相同文件大小和 Hash 值前八位的文件"""
     targetFileInfo = filename.split("_")[-2:]  # 获取 "_460,010_b16625da"
     # 构造搜索模式
@@ -65,7 +65,7 @@ def CheckForDuplicateFiles(targetDir, filename:str):
     matchingFiles = glob.glob(str(targetDir / '**' / searchPattern), recursive=True)
     
     # 如果找到匹配的文件，则认为存在重复文件
-    return len(matchingFiles) > 0
+    return bool(matchingFiles)
 
 # 备份当前桌面图片 desktopWallPaperFilename 到目标目录下
 def BackupDesktopWallPaper(targetDir):
@@ -78,7 +78,7 @@ def BackupDesktopWallPaper(targetDir):
     newFilename, subDir = ComposeNewFilename(desktopWallPaperFilename, "Desktop")
 
     # 创建目标目录，格式为当前月份
-    backupDir = targetDir / subDir
+    backupDir = targetDir / subDir / "Desktop"
     backupDir.mkdir(exist_ok=True)
 
     backupFilename = backupDir / newFilename
@@ -115,7 +115,7 @@ def BackupWallPapers(targetDir):
                 # 构造新的文件名
                 newFilename, subDir = ComposeNewFilename(fileEntry, "WallPaper")
                 # 创建目标目录，格式为当前月份
-                backupDir = targetDir / subDir
+                backupDir = targetDir / subDir / "WallPaper"
                 backupDir.mkdir(exist_ok=True)
 
                 print("\t     => ", newFilename, end="")
@@ -193,7 +193,7 @@ def main():
     if OpenSourceFolder:
         os.system("start " + desktopWallPaperDir)
         os.system("start " + wallpaperDir)
-
+    # 记录日志
     logging.info('Script finished')
         
     return
