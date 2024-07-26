@@ -1,3 +1,7 @@
+# 拆分动态图片
+## 什么是动态图片
+
+
 from isort import file
 import os
 import sys
