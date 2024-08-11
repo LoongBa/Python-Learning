@@ -6,7 +6,7 @@
 # 拆分试卷 PDF 工具
 # 主要功能：将 A3 幅面的 PDF 试卷对半拆分为 A4 幅面的 PDF
 # 作者：loonba
-# 版本号：Ver1.2
+# 版本号：Ver1.1
 
 
 # 主要步骤：
@@ -15,10 +15,15 @@
 # 3. 对提取的每一页的图像对象，左右拆分为两个图像对象（各为原来图像的一半）
 # 4. 按顺序将拆分后的图像对象重新组成一个 PDF 文件，保存原PDF文件相同的位置，文件名加后缀 "_A4"
 # 5. 输出提示信息、打开文件
+
+# V1.0 完成基本功能
+# V1.1 增强了代码的健壮性：将传入参数的相对路径转为绝对路径
+# TODO: V1.2 加入剪裁图片边框
+
 import sys
 import os
 from pdf2image import convert_from_path
-from PIL import Image
+#from PIL import Image
 
 
 # 输出错误信息
@@ -114,16 +119,23 @@ def run_file_by_default_app(file_path):
 
 def main():
     # 1. 获得要拆分的 PDF 文件的名字和完整路径；
-    if len(sys.argv) > 1:
-        pdf_file_path = sys.argv[1]
-        if not os.path.isfile(pdf_file_path) or not pdf_file_path.lower().endswith(
-            ".pdf"
-        ):
-            print_error(f"请提供有效的 PDF 文件：{pdf_file_path}")
-            # pdf_file_path = ""    # 测试数据
-            return
-    else:
+    if len(sys.argv) < 2:
         print_error("请提供要拆分的 PDF 文件的完整路径。")
+        return
+
+    pdf_file_path = sys.argv[1]
+    if not os.path.isabs(pdf_file_path):    # 是否是绝对路径
+        #current_workingfolder_path = os.path.abspath(os.curdir)    # 注意：os.curdir 获取到的可能不是绝对路径，需要加上保险：os.path.abspath()
+        #pdf_file_path = os.path.join(current_workingfolder_path, pdf_file_path)    
+        pdf_file_path = os.path.abspath(pdf_file_path)      # os.path.abspath() 获取绝对路径——拼接了当前工作目录的绝对路径
+        # 尝试基于当前工作目录查找文件
+        if not is_pdf(pdf_file_path):
+            # 如果在当前工作目录中找不到文件，再尝试基于脚本所在目录查找文件
+            script_folder_path = os.path.dirname(os.path.abspath(__file__))     # __file__ 当前脚本的完整路径
+            pdf_file_path = os.path.join(script_folder_path, sys.argv[1])
+        
+    if not is_pdf(pdf_file_path):
+        print_error(f"请提供有效的 PDF 文件：{pdf_file_path}")
         return
 
     new_pdf_file_path = pdf_file_path.lower().replace(".pdf", "_A4.pdf")
@@ -144,6 +156,9 @@ def main():
     # 4. 运行新的 PDF 文件：使用默认的 PDF 阅读器打开
     run_file_by_default_app(new_pdf_file_path)
     return
+
+def is_pdf(pdf_file_path):
+    return os.path.isfile(pdf_file_path) and pdf_file_path.lower().endswith(".pdf")
 
 
 if __name__ == "__main__":
