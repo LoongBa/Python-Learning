@@ -23,38 +23,9 @@
 import sys
 import os
 from pdf2image import convert_from_path
-#from PIL import Image
-
-
-# 输出错误信息
-def print_error(message):
-    print_color(message, "red")
-    return
-
-
-def print_color(message, color="green", end_str="\r\n"):
-    text = color_text(color, message)
-    # 用 switch 判断常用的颜色，或者用 字典
-    print(text, end=end_str)
-
-
-def color_text(color, text):
-    colors = {
-        "red": "\033[91m",
-        "green": "\033[92m",
-        "yellow": "\033[93m",
-        "blue": "\033[94m",
-        "purple": "\033[95m",
-        "cyan": "\033[96m",
-        "white": "\033[97m",
-        "reset": "\033[0m",
-    }
-
-    if color in colors:
-        return f"{colors[color]}{text}{colors['reset']}"
-    else:
-        return text
-
+# 添加上级目录到 sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from myUtils import print_error, run_file_by_default_app, print_color
 
 # 拆分指定的 PDF 文件为多个图片文件
 def split_pdf_into_images(pdf_file_path: str) -> str:
@@ -95,7 +66,6 @@ def split_image_into_images(page_image: any):   # TODO: 将来扩展为支持拆
     image_list = [image_left, image_right]
     return image_list
 
-
 def merge_images_into_pdf(images_list: str, new_pdf_file_path: str) -> str:
     pdf = images_list[0]
     pdf.save(
@@ -106,16 +76,6 @@ def merge_images_into_pdf(images_list: str, new_pdf_file_path: str) -> str:
         append_images = images_list[1:],
     )
     return True, new_pdf_file_path  # 返回完整路径
-
-
-def run_file_by_default_app(file_path):
-    if os.path.isfile(file_path):
-        os.startfile(file_path)
-    else:
-        os.system("explorer.exe", file_path)
-
-    return
-
 
 def main():
     # 1. 获得要拆分的 PDF 文件的名字和完整路径；

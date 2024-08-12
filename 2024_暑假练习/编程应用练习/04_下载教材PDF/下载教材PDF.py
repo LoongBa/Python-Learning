@@ -20,6 +20,10 @@ import os
 import sys
 import re
 import requests       # request 请求 response 回应/响应
+# 添加上级目录到 sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from myUtils import print_error, run_file_by_default_app, print_color
+
 # 获取指定 Url 的 HTML 并返回
 def get_html_by_url(url):
     session = requests.Session()
@@ -87,41 +91,6 @@ def main():
     print_color(f"成功下载教材 {book_name} 的 PDF 文件：{pdf_file_path}", "green")
     run_file_by_default_app(pdf_file_path)
     #run_file_by_default_app(script_folder_path)
-
-# 输出错误信息
-def print_error(message):
-    print_color(message, "red")
-    return
-
-def print_color(message, color="green", end_str="\r\n"):
-    text = color_text(color, message)
-    # 用 switch 判断常用的颜色，或者用 字典
-    print(text, end=end_str)
-
-def color_text(color, text):
-    colors = {
-        "red": "\033[91m",
-        "green": "\033[92m",
-        "yellow": "\033[93m",
-        "blue": "\033[94m",
-        "purple": "\033[95m",
-        "cyan": "\033[96m",
-        "white": "\033[97m",
-        "reset": "\033[0m",
-    }
-
-    if color in colors:
-        return f"{colors[color]}{text}{colors['reset']}"
-    else:
-        return text
-
-def run_file_by_default_app(file_path):
-    if os.path.isfile(file_path):
-        os.startfile(file_path)
-    else:
-        os.system("explorer.exe", file_path)
-
-    return
 
 if __name__ == "__main__":
     main()
