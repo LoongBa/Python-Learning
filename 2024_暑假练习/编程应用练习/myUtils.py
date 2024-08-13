@@ -30,6 +30,6 @@ def run_file_by_default_app(file_path):
     if os.path.isfile(file_path):
         os.startfile(file_path)
     else:
-        os.system("explorer.exe", file_path)
+        os.system(f"explorer.exe {file_path}")
 
     return
