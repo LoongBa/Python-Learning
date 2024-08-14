@@ -37,27 +37,26 @@ def get_html_by_url(url):
     return html
 
 # 获取课件的 PDF url 并返回
-def get_book_pdf_url(book_url:str):
+def get_book_pdf_url(book_guid_or_url:str):
     # book_url 可能是 GUID
     pattern = r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-    match = re.match(pattern, book_url)
+    match = re.match(pattern, book_guid_or_url)
     if match:   # 不是 GUID
-        book_id = book_url
+        book_guid = book_guid_or_url
     else:
         # https://basic.smartedu.cn/tchMaterial/detail?contentType=assets_document&contentId=8b9c7052-add4-4744-ab04-69d6c180d5d9&catalogType=tchMaterial&subCatalog=tchMaterial
         # 定义一个正则表达式规则，用于匹配 PDF url
         # pattern 模式, content 内容
-        pattern = r"contentId=(.*?)&"
+        pattern = r"contentId=(.*?)(&|$)"
         # 使用 re.search() 函数查找匹配的字符串
-        match = re.search(pattern, book_url)    # find, search 查找, match 匹配、比赛
+        match = re.search(pattern, book_guid_or_url)    # find, search 查找, match 匹配、比赛
         # 如果找到匹配的字符串，返回它；否则，返回 None
         if match:   # 是 BookUrl
-            book_id = match.group(1)
+            book_guid = match.group(1)
         else:
-            print_error(f"提供的 教材 Url/GUID 不正确：{book_url}")
             return None
     
-    book_pdf_url = f"https://r1-ndr.ykt.cbern.com.cn/edu_product/esp/assets_document/{book_id}.pkg/pdf.pdf"
+    book_pdf_url = f"https://r1-ndr.ykt.cbern.com.cn/edu_product/esp/assets_document/{book_guid}.pkg/pdf.pdf"
     return book_pdf_url
 
 # 下载指定的文件，并以指定的文件名，保存到指定的位置
@@ -80,24 +79,25 @@ def download_file(file_url, save_path, save_file_name):
     return
 
 def main():
-    #book_url = "https://basic.smartedu.cn/tchMaterial/detail?contentType=assets_document&contentId=8b9c7052-add4-4744-ab04-69d6c180d5d9&catalogType=tchMaterial&subCatalog=tchMaterial"
-    #book_url = "8b9c7052-add4-4744-ab04-69d6c180d5d9"
+    #book_guid_or_url = "https://basic.smartedu.cn/tchMaterial/detail?contentType=assets_document&contentId=8b9c7052-add4-4744-ab04-69d6c180d5d9&catalogType=tchMaterial&subCatalog=tchMaterial"
+    #book_guid_or_url = "8b9c7052-add4-4744-ab04-69d6c180d5d9"
     #book_name = "义务教育教科书·语文七年级上册"
     # 1. 获得要下载的教材的 URL——参数：用户提供
     if len(sys.argv) > 2:
-        book_url = sys.argv[1]
+        book_guid_or_url = sys.argv[1]
         book_name = sys.argv[2]
     else:
         print_error("请提供有效的教材 Url/GUID 和教材名字")
         return
 
     # 2. 用代码下载该 Url，获得网页的内容 HTML
-    #html = get_html_by_url(book_url)
+    #html = get_html_by_url(book_guid_or_url)
 
     # 3. 分析该 book_url 找出我们所需要的内容：教材PDF 的 URL
-    book_pdf_url = get_book_pdf_url(book_url)
+    book_pdf_url = get_book_pdf_url(book_guid_or_url)
     if not book_pdf_url:
-        print_error(f"没找到匹配的教材 GUID：{book_url}")
+        print_error(f"提供的 教材 Url/GUID 不正确：{book_guid_or_url}")
+        print_error(f"没找到匹配的教材 GUID：{book_guid_or_url}")
         return
 
     # 4. 用代码下载该 URL，另存为 PDF 文件
