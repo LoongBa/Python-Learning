@@ -6,7 +6,11 @@
 # 通过调用第三方提供的免费 API 获取天气信息，并保存到数据文件中缓存
 # 后续用于数据统计、分析和绘制图表
 # 作者：loongba
-# 版本号：Ver1.0
+# 修改记录：
+#   Ver1.0 2024-08-26 调用 API 查询北京未来三天的天气信息，未读取参数、未加入缓存
+#   Ver1.1 TODO: 读取城市名字，调用 API 查询城市编码
+#   Ver1.2 TODO: 检查是否有缓存、读取缓存、缓存到本地文件
+#   Ver1.3 TODO: 加入数据统计和绘制图表
 
 # 自顶向下，逐层分解
 # 主要步骤：
@@ -42,7 +46,7 @@ def get_weather_info_from_api(api_key, location, date = datetime.now().strftime(
 
 # 将天气信息缓存到数据文件
 def save_weather_info_to_cache(location, weather_info, date):
-    print(f"城市：{location} 从 {date} 起，未来三日天气预报：\r\n\t{weather_info}")
+    #print(f"城市：{location} 从 {date} 起，未来三日天气预报：\r\n\t{weather_info}")
     return
 
 # 显示天气信息
@@ -67,11 +71,11 @@ def main():
     if is_cache_exists(location, date):
         # 2.1. 如果有缓存，从本地数据文件获取天气信息
         weather_info = get_weather_info_from_cache(location, date)
-        print(f"本地缓存中查询到天气信息")
+        #print(f"本地缓存中查询到天气信息")
     else:
         # 2.2. 如果没有缓存，则调用 API 获取天气信息，并将天气信息保存到数据文件
         weather_info = get_weather_info_from_api(api_key, location, date)
-        print(f"API 查询到天气信息")
+        #print(f"API 查询到天气信息")
     # 3. 显示天气信息    
     print_weather_info(location_name, weather_info)
 
