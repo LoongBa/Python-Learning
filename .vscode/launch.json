@@ -5,6 +5,13 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Python 调试程序: 当前文件",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Python 调试程序: 下载教材PDF 参数",
       "type": "debugpy",
       "request": "launch",
@@ -13,20 +20,21 @@
       "args": ["540ac93d-67fc-4353-9e49-1ef20d02b5a4", "义务教育教科书·数学七年级上册"]
     },
     {
-      "name": "Python 调试程序: 当前文件",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${file}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "Python 调试程序: 拆分试卷PDF 参数",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal",
       "args": ["test.pdf"]
-    }
+    },
+    {
+      "name": "Python 调试程序: 获取天气预报",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}\\2024_暑假练习\\编程应用练习\\06_获取天气信息\\WeatherInfo.py",
+      "console": "integratedTerminal",
+      "args": ["chaoyang", "beijing"]
+    },
   ],
   "compounds": [
     {
