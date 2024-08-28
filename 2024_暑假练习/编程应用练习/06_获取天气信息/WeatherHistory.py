@@ -5,7 +5,6 @@ from datetime import datetime
 import regex as re
 import json
 
-
 # 获取指定城市指定月份的天气信息
 def get_weather_history_monthly(city_name, date_month: datetime):
     date_month = datetime.now().strftime("%Y%m")

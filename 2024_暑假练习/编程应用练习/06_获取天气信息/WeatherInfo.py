@@ -9,8 +9,9 @@
 # 修改记录：
 #   Ver1.0 20240826 调用 API 查询北京未来三天的天气信息，未读取参数、未加入缓存
 #   Ver1.1 20240827: 读取城市名字，调用 API 查询城市编码
-#   Ver1.2 TODO: 检查是否有缓存、读取缓存、缓存到本地文件
-#   Ver1.3 TODO: 加入模块：从某网站读取历史天气信息并保存为文件
+#   Ver1.2 20240828: 微调、重构了 API 调用代码
+#   Ver1.3 TODO: 检查是否有缓存、读取缓存、缓存到本地文件
+#   Ver1.4 TODO: 加入模块：从某网站读取历史天气信息并保存为文件
 #   Ver1.x TODO: 加入数据统计和绘制图表
 
 # 自顶向下，逐层分解
@@ -25,8 +26,14 @@ from datetime import datetime
 import requests
 import json
 import sys
+import os
+
+# 添加上级目录到 sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from myUtils import print_error, run_file_by_default_app, print_color
 
 api_key = "4221343812994b3db7eb5cc3bb6e252f"
+
 
 # 从运行参数中获取城市名称或 ID
 def get_argv():
@@ -39,19 +46,6 @@ def get_argv():
         sys.exit(1)
 
     return location, location_adm
-
-# 获取城市的地理信息：行政区划编码、城市名称
-def get_geo_info(location, location_adm=""):
-    api_url = f"https://geoapi.qweather.com/v2/city/lookup?location={location}&adm={location_adm}&range=cn&key={api_key}"
-    response = requests.get(api_url)
-    location = response.json()
-    print(api_url)
-    return {
-        "location_id": location["location"][0]["id"],
-        "location_name": location["location"][0]["name"],
-        "location_adm1": location["location"][0]["adm1"],
-        "location_adm2": location["location"][0]["adm2"],
-    }
 
 
 # 判断是否已经有本地数据缓存
@@ -66,17 +60,42 @@ def get_weather_info_from_cache(location, date):
     return "晴，最高温度 30 度，最低温度 20 度"
 
 
+# 获取城市的地理信息：行政区划编码、城市名称——Business Logic
+def get_geo_info(location_string, location_adm = ""):
+    api_url = f"https://geoapi.qweather.com/v2/city/lookup?location={location_string}&adm={location_adm}&range=cn&key={api_key}"
+    json = call_web_api(api_url)
+    if "code" in json and json["code"] == "200":
+        return {
+            "location_id": json["location"][0]["id"],
+            "location_name": json["location"][0]["name"],
+            "location_adm1": json["location"][0]["adm1"],
+            "location_adm2": json["location"][0]["adm2"],
+        }
+    else:
+        print_error(f"获取城市编码出错：{location_string} {location_adm} \r\n\t{json}")
+    return None
+
 # 调用 API 获取天气信息，并缓存
-def get_weather_info_from_api(location, date=datetime.now().strftime("%Y-%m-%d")):
+def get_weather_info_from_api(location_id, days = 3):
     # 调用 和风天气的 API 获取未来三日天气预报
-    url = f"https://devapi.qweather.com/v7/weather/3d?location={location}&key={api_key}"
-    response = requests.get(url)
-    weather_info = response.json()
-    if "code" in weather_info and weather_info["code"] == "200":
-        # TODO: 将天气信息缓存到数据文件
-        return weather_info
-    #print(url)
-    #print(weather_info)
+    api_url = f"https://devapi.qweather.com/v7/weather/3d?location={location_id}&key={api_key}"
+    json = call_web_api(api_url)
+    if "code" in json and json["code"] == "200":
+        return json
+    else:
+        print_error(f"获取天气信息出现异常：{json}\r\n\t{api_url}")
+
+    return None
+
+# 工具方法：没有业务逻辑
+# 提高了程序的可复用性——提取到工具箱作为公共模块
+def call_web_api(api_url):
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()  # 如果返回的 HTTP 状态码不是 2xx
+        return response.json()
+    except Exception as e:
+        print_error(f"调用 API 出现异常：{e}\r\n\t{api_url}")
     return None
 
 # 将天气信息缓存到数据文件
@@ -99,12 +118,13 @@ def print_weather_info(location_name, weather_info):
 
 def main():
     # 1. 获取参数：要查询哪个城市、哪一天的天气信息
-    location, location_adm = get_argv()
+    location_string, location_adm = get_argv()
     # 从运行参数中获取城市名称或 ID
-    location_info = get_geo_info(location, location_adm)
+    location_info = get_geo_info(
+        location_string, location_adm
+    )  # information，例如 GIS：Geographic Information System
     location_id = location_info["location_id"]
     location_name = location_info["location_name"]
-    print(f'{location_info["location_adm1"]} {location_info["location_adm2"]} {location_info["location_name"]} {location_info["location_id"]} 未来三日天气预报：')
 
     # 默认获取今天的日期
     date = datetime.now()
@@ -121,7 +141,7 @@ def main():
     if weather_info:
         print_weather_info(location_name, weather_info)
     else:
-        print("查询天气信息失败")
+        print_error("查询天气信息失败")
 
     return
 
