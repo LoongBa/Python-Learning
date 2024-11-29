@@ -62,6 +62,7 @@ def get_book_pdf_url(book_guid_or_url:str):
 # 下载指定的文件，并以指定的文件名，保存到指定的位置
 def download_file(file_url, save_path, save_file_name):
     try:
+        print_color(f"开始下载：{file_url}", 'green')
         response = requests.get(file_url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})      # response 响应，request 请求
         response.raise_for_status() # status 状态       # 确保返回 200
 

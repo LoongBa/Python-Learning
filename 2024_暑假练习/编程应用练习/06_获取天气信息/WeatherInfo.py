@@ -30,10 +30,40 @@ import os
 
 # 添加上级目录到 sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from myUtils import print_error, run_file_by_default_app, print_color
+from myUtils import print_error, print_color, debug_print
 
 api_key = "4221343812994b3db7eb5cc3bb6e252f"
 
+def main():
+    __is_debug__ = True  # 启用 debug 输出
+    # 1. 获取参数：要查询哪个城市、哪一天的天气信息
+    location_string, location_adm = get_argv()
+    # 从运行参数中获取城市名称或 ID
+    location_info = get_geo_info(
+        location_string, location_adm
+    )  # information，例如 GIS：Geographic Information System
+    location_id = location_info["location_id"]
+    location_name = location_info["location_name"]
+
+    # 默认获取今天的日期
+    date = datetime.now()
+    # 2. 判断是否已经有本地数据缓存
+    cache = is_cache_exists(location_id, date)
+    if is_cache_exists(location_id, date):
+        # 2.1. 如果有缓存，从本地数据文件获取天气信息
+        weather_info = get_weather_info_from_cache(location_id, date)
+        # print(f"本地缓存中查询到天气信息")
+    else:
+        # 2.2. 如果没有缓存，则调用 API 获取天气信息，并将天气信息保存到数据文件
+        weather_info = get_weather_info_from_api(location_id)
+        # print(f"API 查询到天气信息")
+    # 3. 显示天气信息
+    if weather_info:
+        print_weather_info(location_name, weather_info)
+    else:
+        print_error("查询天气信息失败")
+
+    return
 
 # 从运行参数中获取城市名称或 ID
 def get_argv():
@@ -46,7 +76,6 @@ def get_argv():
         sys.exit(1)
 
     return location, location_adm
-
 
 # 判断是否已经有本地数据缓存
 def is_cache_exists(location, date):
@@ -87,9 +116,11 @@ def get_weather_info_from_api(location_id, days = 3):
 
     return None
 
-# 工具方法：没有业务逻辑
+# 工具函数：没有业务逻辑
 # 提高了程序的可复用性——提取到工具箱作为公共模块
+# 注意：这里【封装】了调用 API 的通用逻辑
 def call_web_api(api_url):
+    debug_print(f"开始调用 API：{api_url}")
     try:
         response = requests.get(api_url)
         response.raise_for_status()  # 如果返回的 HTTP 状态码不是 2xx
@@ -105,6 +136,7 @@ def save_weather_info_to_cache(location, weather_info, date):
 
 
 # 显示天气信息
+# 注意：高度业务化，使用了 和天气 的 API
 def print_weather_info(location_name, weather_info):
     print(f"{location_name}未来三日天气预报：")
     for day_info in weather_info["daily"]:
@@ -114,37 +146,6 @@ def print_weather_info(location_name, weather_info):
         print(f"\t{date} 最高温度：{tempMax} 度，最低温度：{tempMin}")
         print(f"\t\t日升时间：{day_info['sunrise']}\t日落时间：{day_info['sunset']}")
     return
-
-
-def main():
-    # 1. 获取参数：要查询哪个城市、哪一天的天气信息
-    location_string, location_adm = get_argv()
-    # 从运行参数中获取城市名称或 ID
-    location_info = get_geo_info(
-        location_string, location_adm
-    )  # information，例如 GIS：Geographic Information System
-    location_id = location_info["location_id"]
-    location_name = location_info["location_name"]
-
-    # 默认获取今天的日期
-    date = datetime.now()
-    # 2. 判断是否已经有本地数据缓存
-    if is_cache_exists(location_id, date):
-        # 2.1. 如果有缓存，从本地数据文件获取天气信息
-        weather_info = get_weather_info_from_cache(location_id, date)
-        # print(f"本地缓存中查询到天气信息")
-    else:
-        # 2.2. 如果没有缓存，则调用 API 获取天气信息，并将天气信息保存到数据文件
-        weather_info = get_weather_info_from_api(location_id)
-        # print(f"API 查询到天气信息")
-    # 3. 显示天气信息
-    if weather_info:
-        print_weather_info(location_name, weather_info)
-    else:
-        print_error("查询天气信息失败")
-
-    return
-
 
 if __name__ == "__main__":
     main()

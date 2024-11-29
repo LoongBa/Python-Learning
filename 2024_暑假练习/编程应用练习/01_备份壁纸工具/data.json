@@ -1,0 +1,4 @@
+[
+    {"Name":"xxxxxxxxxxxxxxxx1", "Hash":"zzzzzzzzzzzzzzzzzz1", "IsCopied": true, "DateTime": "", "BackupFilename":"file1.jpg"},
+    {"Name":"xxxxxxxxxxxxxxxx2", "Hash":"zzzzzzzzzzzzzzzzzz2", "IsCopied": true, "DateTime": "", "BackupFilename":"file2.jpg"}
+]

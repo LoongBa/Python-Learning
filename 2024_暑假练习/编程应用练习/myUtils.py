@@ -1,5 +1,14 @@
 import os
 
+__is_debug__ = True  # 启用 debug 输出
+
+def debug_print(message, color="yellow", level = 0, end_str="\r\n"):
+    if __is_debug__ and level >= 0:
+        print_color(f"[Debug]{level} {message}", color)
+    else:
+        pass
+    return
+
 def print_error(message):
     print_color(message, "red")
     return

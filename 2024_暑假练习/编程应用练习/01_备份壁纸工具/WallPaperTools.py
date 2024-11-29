@@ -15,12 +15,6 @@ AutoOpenFolder = False
 
 # 获取当前脚本的目录
 script_dir = os.path.dirname(os.path.realpath(__file__))
-# 设置日志文件路径
-log_file = os.path.join(script_dir, 'task.log')
-
-# 设置日志格式
-logging.basicConfig(filename=log_file, level=logging.INFO, 
-                    format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 def calculate_file_hash(filename, hash_method=hashlib.sha256, bufsize=8192):
     """计算文件的 Hash 值"""
@@ -84,6 +78,7 @@ def BackupDesktopWallPaper(targetDir):
     backupDir = backupDir / sub_dir_name
     backupDir.mkdir(exist_ok=True)
 
+    done = 0
     backupFilename = backupDir / newFilename
     # 检查目标文件夹是否已经存在同名文件
     if CheckForDuplicateFiles(targetDir, newFilename):
@@ -92,19 +87,20 @@ def BackupDesktopWallPaper(targetDir):
         # 复制当前桌面图片到目标目录，并使用备份文件名
         shutil.copy2(desktopWallPaperFilename, backupFilename)
         print(f"\t桌面壁纸\t{newFilename}\t\033[32m备份完成\033[0m")
+        done = 1
     print()
-    return desktopWallPaperFilename.parent
-
+    return desktopWallPaperFilename.parent, done
 
 # 备份锁屏壁纸到 targetDir 目录下
 def BackupWallPapers(targetDir):
     # 读取环境变量 %USERPROFILE% 的值，用于构造完整路径
     wallpaperDir = (
-        os.getenv("USERPROFILE")
+        os.getenv("")
         + "\\AppData\\Local\\Packages\\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\\LocalState\\Assets"
     )
 
     i = 0
+    done = 0
     # 遍历壁纸目录中的文件
     for fileEntry in Path(wallpaperDir).iterdir():
         if fileEntry.is_file():
@@ -133,7 +129,8 @@ def BackupWallPapers(targetDir):
                 else:
                     shutil.copy2(fileEntry, newFilename)
                     print("\t\033[32m备份完成\033[0m")
-    return wallpaperDir
+                    done += 1
+    return wallpaperDir, done
 
 
 # 通过注册表信息，获取用户图片文件夹位置
@@ -149,12 +146,23 @@ def get_user_shell_folders():
 
 
 def main():
+
+    # 设置备份目录
+    backup_folder = Path(get_user_shell_folders()) / "_WallPaper_Backup_"
+
+    # 设置日志文件路径
+    log_file = os.path.join(backup_folder, 'task.log')
+
+    # 设置日志格式
+    logging.basicConfig(filename=log_file, level=logging.INFO, 
+                        format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
     print("壁纸备份工具 V1.40 \n作者：xxx CopyRight 2024")
     print("---------------------------")
     print("自动备份锁屏壁纸、桌面壁纸到系统“我的图片”文件夹下，按年月创建子目录。支持指定备份目录。")
     print("新增基于 Hash 值避免重复文件。")
     print("TODO: 可以用已有图片替换桌面和锁屏壁纸。\n")
-    logging.info('Script started')
+    logging.info('壁纸备份工具启动：')
 
     parser = argparse.ArgumentParser(description="壁纸工具")
     parser.add_argument("--open-source-folder", action="store_true", help="自动打开来源文件夹")
@@ -164,7 +172,7 @@ def main():
         "backup_dir",
         nargs="?",
         type=Path,
-        default=Path(get_user_shell_folders()) / "_WallPaper_Backup_",
+        default = backup_folder,
         help="指定备份目录的路径，默认为系统“我的图片”文件夹下的_WallPaper_Backup_目录",
     )
     args = parser.parse_args()
@@ -181,9 +189,9 @@ def main():
     # wallpaperBackupDir.mkdir(exist_ok=True)
 
     # 备份桌面壁纸
-    desktopWallPaperDir = BackupDesktopWallPaper(wallpaperBackupDir)
+    desktopWallPaperDir, desktopDone = BackupDesktopWallPaper(wallpaperBackupDir)
     # 备份锁屏壁纸
-    wallpaperDir = BackupWallPapers(wallpaperBackupDir)
+    wallpaperDir, wallpaperDone = BackupWallPapers(wallpaperBackupDir)
 
     # 输出完整路径，后续仅输出文件名
     print("---------------------------")
@@ -200,7 +208,7 @@ def main():
         os.system("start " + desktopWallPaperDir)
         os.system("start " + wallpaperDir)
     # 记录日志
-    logging.info('Script finished')
+    logging.info('壁纸备份工具结束，备份壁纸：' + str(wallpaperDone) + " 备份桌面壁纸：" + str(desktopDone))
         
     return
 

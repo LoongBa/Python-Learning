@@ -36,7 +36,7 @@ def main():
         ai_answer = chat_with_ai(user_input)
         st.write(ai_answer)
 
-def chat_with_ai(question):
+def chat_with_ai(question): # 封装
     client = OpenAI(api_key="sk-b4276afe3b344c29be0d95ea86d8085d", base_url="https://api.deepseek.com")
 
     response = client.chat.completions.create(

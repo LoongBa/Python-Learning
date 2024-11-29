@@ -1,5 +1,6 @@
 {
     "Codegeex.CompletionModel": "CodeGeeX Pro[Beta]",
     "CodeGPT.apiKey": "DeepSeek",
-    "CodeGPT.Autocomplete.enabled": true
+    "CodeGPT.Autocomplete.enabled": true,
+    "marscode.chatLanguage": "cn"
 }
