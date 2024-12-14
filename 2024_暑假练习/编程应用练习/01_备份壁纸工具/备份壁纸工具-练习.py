@@ -25,7 +25,7 @@ def get_windows_my_pictures():
     try:
         key = winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
-            r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
+            "Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
         )
         my_pictures_path, _ = winreg.QueryValueEx(key, "My Pictures")
         # 如果路径包含环境变量（如 %USERPROFILE%），需要展开它
