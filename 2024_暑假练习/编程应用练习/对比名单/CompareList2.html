@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名单比较工具</title>
+    <!-- Ant Design Vue CSS from jsDelivr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ant-design-vue@1.7.8/dist/antd.min.css">
+    <!-- Vue.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <!-- Ant Design Vue JS from jsDelivr -->
+    <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@1.7.8/dist/antd.min.js"></script>
+    <style>
+        .textarea-fixed-height {
+            height: 200px; /* 设置固定高度 */
+            resize: none; /* 禁止调整大小 */
+        }
+        .typography-margin {
+            margin-bottom: 8px; /* 添加底部外边距 */
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>名单比较工具</h1>
+        <p>本工具用于比较两个名单，找出第一个名单中的名字是否作为子字符串存在于第二个名单中的某个名字里。</p>
+        <a-row type="flex" justify="space-between" align="middle">
+            <a-col :span="11">
+                <a-textarea v-model="savedNames" placeholder="已保存的名字" :rows="8" class="textarea-fixed-height" />
+            </a-col>
+            <a-col :span="2" style="text-align: center;">
+                <a-button type="primary" @click="compareLists">比较名字</a-button>
+            </a-col>
+            <a-col :span="11">
+                <a-textarea v-model="compareNames" placeholder="待比较的名字" :rows="8" class="textarea-fixed-height" />
+            </a-col>
+        </a-row>
+        <a-row>
+            <a-col :span="11">
+                <a-typography class="typography-margin">
+                    <a-typography-title :level="1">在名单里的名字：{{ foundCount }} 个</a-typography-title>
+                </a-typography>
+                <a-textarea v-model="resultsFoundText" placeholder="在名单里的名字" :rows="8" readonly v-html="resultsFoundText" class="textarea-fixed-height" />
+            </a-col>
+            <a-col :span="11" :offset="2">
+                <a-typography class="typography-margin">
+                    <a-typography-title :level="1">不在名单里的名字：{{ notFoundCount }} 个</a-typography-title>
+                </a-typography>
+                <a-textarea v-model="resultsNotFoundText" placeholder="不在名单里的名字" :rows="8" readonly v-html="resultsNotFoundText" class="textarea-fixed-height" />
+            </a-col>
+        </a-row>
+    </div>
+
+    <!-- Vue.js App -->
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                savedNames: '',
+                compareNames: '',
+                results: null
+            },
+            computed: {
+                foundCount() {
+                    return this.results ? this.results.found.length : 0;
+                },
+                notFoundCount() {
+                    return this.results ? this.results.notFound.length : 0;
+                },
+                resultsFoundText() {
+                    if (!this.results) return '';
+                    let foundText = '';
+                    const maxLength = this.results.found.reduce((max, item) => Math.max(max, item.name.length), 0);
+                    this.results.found.sort((a, b) => a.compareIdx - b.compareIdx).forEach(item => {
+                        foundText += `${String(item.compareIdx-1).padStart(2, '0')} (${String(item.idx).padStart(2, '0')})  ${item.name.padEnd(maxLength, '　')} | ${this.compareNames.split('\n')[item.compareIdx] || ''}\n`;
+                    });
+                    return foundText;
+                },
+                resultsNotFoundText() {
+                    if (!this.results) return '';
+                    let notFoundText = '';
+                    this.results.notFound.forEach(item => {
+                        notFoundText += `${String(item.idx).padStart(2, '0')} (${String(item.idx).padStart(2, '0')}) ${item.name}\n`;
+                    });
+                    return notFoundText;
+                }
+            },
+            methods: {
+                compareLists() {
+                    const list1 = this.savedNames.split('\n').filter(name => name.trim() !== '');
+                    const list2 = this.compareNames.split('\n').filter(name => name.trim() !== '');
+
+                    let list_found = [];
+                    let list_not_found = [];
+                    for (let idx1 = 0; idx1 < list1.length; idx1++) {
+                        const item1 = list1[idx1];
+                        let found = false;
+                        for (let idx2 = 0; idx2 < list2.length; idx2++) {
+                            if (list2[idx2].includes(item1)) {
+                                found = true;
+                                list_found.push({ idx: idx1 + 1, name: item1, compareIdx: idx2 + 1 });
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            list_not_found.push({ idx: idx1 + 1, name: item1 });
+                        }
+                    }
+                    this.results = {
+                        found: list_found,
+                        notFound: list_not_found
+                    };
+                },
+                saveInput() {
+                    localStorage.setItem('savedNames', this.savedNames);
+                    localStorage.setItem('compareNames', this.compareNames);
+                },
+                loadInput() {
+                    this.savedNames = localStorage.getItem('savedNames') || '';
+                    this.compareNames = localStorage.getItem('compareNames') || '';
+                }
+            },
+            mounted() {
+                this.loadInput();
+            },
+            watch: {
+                savedNames() {
+                    this.saveInput();
+                },
+                compareNames() {
+                    this.saveInput();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

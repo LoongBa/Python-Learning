@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>名单比较工具</title>
+  <!-- 引入 Material Design 样式 -->
+  <link rel="stylesheet" href="https://unpkg.com/@materializecss/materialize@1.1.0/dist/css/materialize.min.css">
+  <!-- 引入 Vue.js -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <style>
+    body {
+      padding: 20px;
+    }
+
+    textarea {
+      height: 200px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <h3 class="center-align">名单比较工具</h3>
+    <div class="row">
+      <div class="col s6">
+        <div class="input-field">
+          <textarea id="list1" v-model="list1" class="materialize-textarea"></textarea>
+          <label for="list1">第一个名单</label>
+        </div>
+        <div class="input-field">
+          <input type="text" id="saveName" v-model="saveName">
+          <label for="saveName">保存名字</label>
+        </div>
+        <p>
+          <label>
+            <input type="checkbox" v-model="shouldSave">
+            <span>保存到浏览器存储</span>
+          </label>
+        </p>
+        <button class="btn waves-effect waves-light" @click="saveList">保存</button>
+        <button class="btn waves-effect waves-light" @click="loadList">加载</button>
+        <div v-if="savedLists.length > 0">
+          <p>选择要加载的名单:</p>
+          <ul>
+            <li v-for="(list, index) in savedLists" :key="index">
+              <label>
+                <input type="radio" v-model="selectedListIndex" :value="index">
+                <span>{{ list.name }}</span>
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="col s6">
+        <div class="input-field">
+          <textarea id="list2" v-model="list2" class="materialize-textarea"></textarea>
+          <label for="list2">第二个名单</label>
+        </div>
+      </div>
+    </div>
+    <div class="center-align">
+      <button class="btn waves-effect waves-light" @click="compareLists">比较</button>
+    </div>
+    <div v-if="showResults">
+      <h4>比较结果</h4>
+      <p>不在第一个名单里的名字:</p>
+      <ul>
+        <li v-for="(name, index) in notInList1" :key="index">{{ name }}</li>
+      </ul>
+      <p>不在第二个名单里的名字:</p>
+      <ul>
+        <li v-for="(name, index) in notInList2" :key="index">{{ name }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        list1: '',
+        list2: '',
+        saveName: '',
+        shouldSave: false,
+        savedLists: [],
+        selectedListIndex: 0,
+        showResults: false,
+        notInList1: [],
+        notInList2: []
+      },
+      mounted() {
+        this.loadSavedLists();
+      },
+      methods: {
+        saveList() {
+          if (this.shouldSave && this.saveName) {
+            const savedLists = JSON.parse(localStorage.getItem('savedLists')) || [];
+            savedLists.push({ name: this.saveName, list: this.list1 });
+            localStorage.setItem('savedLists', JSON.stringify(savedLists));
+            this.loadSavedLists();
+            alert('名单已保存');
+          }
+        },
+        loadSavedLists() {
+          this.savedLists = JSON.parse(localStorage.getItem('savedLists')) || [];
+          if (this.savedLists.length > 0) {
+            this.selectedListIndex = 0;
+            this.loadList();
+          }
+        },
+        loadList() {
+          if (this.savedLists.length > 0) {
+            this.list1 = this.savedLists[this.selectedListIndex].list;
+          }
+        },
+        compareLists() {
+          const list1 = this.list1.split(/[^\w\u4e00-\u9fff]+/).filter(name => name);
+          const list2 = this.list2.split(/[^\w\u4e00-\u9fff]+/).filter(name => name);
+
+          const set1 = new Set(list1);
+          const set2 = new Set(list2);
+
+          this.notInList1 = [...set2].filter(name => !set1.has(name));
+          this.notInList2 = [...set1].filter(name => !set2.has(name));
+
+          this.showResults = true;
+        }
+      }
+    });
+  </script>
+  <!-- 引入 Material Design JavaScript -->
+  <script src="https://unpkg.com/@materializecss/materialize@1.1.0/dist/js/materialize.min.js"></script>
+</body>
+
+</html>

@@ -634,7 +634,7 @@ def is_Armstrong_Number(number, power:int = 3):
 
 ---
 
-### 4. 求阶和、阶乘，学习递推和递归
+### 4. 求阶和、阶乘，学习迭代和递归
 
 #### 背景知识：
 

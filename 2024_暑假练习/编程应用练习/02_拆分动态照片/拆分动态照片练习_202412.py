@@ -41,7 +41,7 @@ def save_split_files(motion_pitcture_path):
         return None, "文件内容中未找到视频开始标识，无法拆分。"
 
     # 将从开始到 jpg_pos_end 的数据，保存为文件 jpg_file_path
-    jpg_content = file_content[:jpg_pos_end] # 语法糖
+    jpg_content = file_content[:jpg_pos_end + len(keywords)] # 语法糖
     # "D:\_Dev_\_Repos_\Github\_CoffeeScholar_\Python-Learning\2024_暑假练习\编程应用练习\02_拆分动态照片\20230612_161417.jpg"
     jpg_file_path = motion_pitcture_path.replace(".jpg", "_Photo.jpg")
 

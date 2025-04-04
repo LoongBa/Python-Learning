@@ -54,7 +54,7 @@ def get_pdf_file_path() -> str:
     return pdf_file_path, new_pdf_file_path
 
 # 提取 PDF 文件中的每一页为图像对象
-def extract_pdf_into_images(pdf_file_path: str) -> str:
+def split_pdf(pdf_file_path: str, new_pdf_file_path: str) -> str:
     # 每个函数，是个承担“单一职责”的命令集合
     # 就像应用题需要提供必要的数据，这里就对应着参数；
     # 解应用题时，需要根据题目（参数）提供的直接信息推导出所需要的间接信息
@@ -63,23 +63,29 @@ def extract_pdf_into_images(pdf_file_path: str) -> str:
 
     # 调用第三方包，对折 PDF 为多个图像的对象
     pages_images = convert_from_path(pdf_file_path)  # convert 转换
+    #TODO: 检查错误
     pdf_file_name = os.path.basename(pdf_file_path).lower()
     print_color(f"\t正在对折：{pdf_file_name}")  # 输出信息
 
-    image_list = []
+    splited_images_list = []
     # 遍历每一页对应的图像文件（内存中）
     for i, page_image in enumerate(pages_images):
         # 利用了 enumerate 将可枚举类型返回为 加了索引的 可枚举类型：元组的 Array
         page_number = i + 1
         # 对折页对应的图片为两个图片
-        page_images_list = split_image_into_images(
-            page_image
-        )  # 调用函数对折图片
-        image_list.extend(page_images_list) 
+        page_images_list = split_image_into_images(page_image)  # 调用函数对折图片
+        splited_images_list.extend(page_images_list) 
         # 顺手学单词：extend 扩展， append 追加， Injection 注入
         print_color(f"\t\t成功对折第 {page_number} 页。")  # 输出信息
 
-    return True, image_list
+    # 保存为 PDF 文件
+    pdf_first_page_image = splited_images_list[0]
+    pdf_first_page_image.save(new_pdf_file_path, "PDF", save_all = True,
+        # 追加剩余图像  append: 追加
+        append_images = splited_images_list[1:], 
+    )
+
+    return True, new_pdf_file_path
 
 
 # 将指定的图片文件，拆分成两个图片文件
@@ -117,19 +123,12 @@ def main():
         return
     
     # 2. 提取 PDF 文件中的每一页为图像对象
-    is_success, image_list = extract_pdf_into_images(pdf_file_path)
+    is_success, new_pdf_file_path = split_pdf(pdf_file_path, new_pdf_file_path)
     if not is_success:
-        print_error(f"提取 PDF 文件失败：{image_list}")
+        print_error(f"提取 PDF 文件失败：{pdf_file_path}")
         return
 
-    # 3. 对处理过的图像对象，按顺序重新组成PDF文件
-    result, error_message = merge_images_into_pdf(
-        image_list, new_pdf_file_path
-    )  # merge 融合、合并
-    if result:
-        print_color(f"PDF 文件已保存到: {new_pdf_file_path}")
-    else:
-        print_error(error_message)
+    print_color(f"PDF 文件已保存到: {new_pdf_file_path}")
 
     # 4. 运行新的 PDF 文件：使用默认的 PDF 阅读器打开
     run_file_by_default_app(new_pdf_file_path)
